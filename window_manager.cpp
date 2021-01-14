@@ -11,14 +11,12 @@ bool WindowManager::wm_detected_;
 
 std::unique_ptr<WindowManager> WindowManager::Create()
 {
-    const char* display_c_str = nullptr;
-
-    Display* display = XOpenDisplay(display_c_str);
+    Display* display = XOpenDisplay(nullptr);
     if (display == nullptr) {
-        /* std::cout << "Failed to open X display " << XDisplayName(display_c_str); */
+        std::cout << "Failed to open X display " << XDisplayName(nullptr) << std::endl;
         return nullptr;
     }
-    std::unique_ptr<WindowManager> wmInstance = std::make_unique<WindowManager>(WindowManager(display));
+    std::unique_ptr<WindowManager> wmInstance(new WindowManager(display));
     return wmInstance;
 }
 
@@ -46,8 +44,8 @@ void WindowManager::Run()
         SubstructureRedirectMask | SubstructureNotifyMask);
     XSync(display_, false);
     if (wm_detected_) {
-        /* std::cout << "Detected another window manager on display " */
-                  /* << XDisplayString(display_); */
+        std::cout << "Detected another window manager on display "
+                  << XDisplayString(display_) << std::endl;
         return;
     }
     XSetErrorHandler(&WindowManager::OnXError);
@@ -73,7 +71,7 @@ void WindowManager::Run()
     for (;;) {
         XEvent e;
         XNextEvent(display_, &e);
-        /* std::cout << "Received event: " << ToString(e); */
+        std::cout << "Received event: " << ToString(e) << std::endl;
 
         switch (e.type) {
         case CreateNotify:
@@ -119,9 +117,7 @@ void WindowManager::Run()
             OnKeyRelease(e.xkey);
             break;
         default:
-            int a = 1;
-            a = 2;
-            /* std::cout << "Ignored event"; */
+            std::cout << "Ignored event" << std::endl;
         }
     }
 }
@@ -213,7 +209,7 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
         GrabModeAsync,
         GrabModeAsync);
 
-    /* std::cout << "Framed window " << w << " [" << frame << "]"; */
+    std::cout << "Framed window " << w << " [" << frame << "]";
 }
 
 void WindowManager::Unframe(Window w)
@@ -231,7 +227,7 @@ void WindowManager::Unframe(Window w)
     XDestroyWindow(display_, frame);
     clients_.erase(w);
 
-    /* std::cout << "Unframed window " << w << " [" << frame << "]"; */
+    std::cout << "Unframed window " << w << " [" << frame << "]";
 }
 
 void WindowManager::OnCreateNotify(const XCreateWindowEvent& e) { }
@@ -245,13 +241,13 @@ void WindowManager::OnMapNotify(const XMapEvent& e) { }
 void WindowManager::OnUnmapNotify(const XUnmapEvent& e)
 {
     if (!clients_.count(e.window)) {
-        /* std::cout << "Ignore UnmapNotify for non-client window " << e.window; */
+        std::cout << "Ignore UnmapNotify for non-client window " << e.window;
         return;
     }
 
     if (e.event == root_) {
-        /* std::cout << "Ignore UnmapNotify for reparented pre-existing window " */
-                  /* << e.window; */
+        std::cout << "Ignore UnmapNotify for reparented pre-existing window "
+                  << e.window;
         return;
     }
 
@@ -274,10 +270,10 @@ void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e)
     if (clients_.count(e.window)) {
         const Window frame = clients_[e.window];
         XConfigureWindow(display_, frame, e.value_mask, &changes);
-        /* std::cout << "Resize [" << frame << "] to " << Size<int>(e.width, e.height); */
+        std::cout << "Resize [" << frame << "] to " << Size<int>(e.width, e.height);
     }
     XConfigureWindow(display_, e.window, e.value_mask, &changes);
-    /* std::cout << "Resize " << e.window << " to " << Size<int>(e.width, e.height); */
+    std::cout << "Resize " << e.window << " to " << Size<int>(e.width, e.height);
 }
 
 void WindowManager::OnMapRequest(const XMapRequestEvent& e)
@@ -360,7 +356,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e)
                     supported_protocols + num_supported_protocols,
                     WM_DELETE_WINDOW)
                 != supported_protocols + num_supported_protocols)) {
-            /* std::cout << "Gracefully deleting window " << e.window; */
+            std::cout << "Gracefully deleting window " << e.window;
 
             XEvent msg;
             memset(&msg, 0, sizeof(msg));
@@ -372,7 +368,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e)
 
             assert(XSendEvent(display_, e.window, false, 0, &msg));
         } else {
-            /* std::cout << "Killing window " << e.window; */
+            std::cout << "Killing window " << e.window;
             XKillClient(display_, e.window);
         }
     } else if ((e.state & Mod1Mask) && (e.keycode == XKeysymToKeycode(display_, XK_Tab))) {
@@ -394,8 +390,11 @@ void WindowManager::OnKeyRelease(const XKeyEvent& e) { }
 int WindowManager::OnWMDetected(Display* display, XErrorEvent* e)
 {
     assert(static_cast<int>(e->error_code) == BadAccess);
-    wm_detected_ = true;
-    return 0;
+    if (static_cast<int>(e->error_code) == BadAccess) {
+        wm_detected_ = true;
+        return 0;
+    }
+    return -1;
 }
 
 int WindowManager::OnXError(Display* display, XErrorEvent* e)
@@ -404,11 +403,11 @@ int WindowManager::OnXError(Display* display, XErrorEvent* e)
     char error_text[MAX_ERROR_TEXT_LENGTH];
     XGetErrorText(display, e->error_code, error_text, sizeof(error_text));
 
-    /* std::cout << "Received X error:\n" */
-              /* << "    Request: " << int(e->request_code) */
-              /* << " - " << XRequestCodeToString(e->request_code) << "\n" */
-              /* << "    Error code: " << int(e->error_code) */
-              /* << " - " << error_text << "\n" */
-              /* << "    Resource ID: " << e->resourceid; */
+    std::cout << "Received X error:\n"
+              << "    Request: " << int(e->request_code)
+              << " - " << XRequestCodeToString(e->request_code) << "\n"
+              << "    Error code: " << int(e->error_code)
+              << " - " << error_text << "\n"
+              << "    Resource ID: " << e->resourceid << "\n";
     return 0;
 }
