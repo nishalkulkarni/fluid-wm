@@ -7,9 +7,11 @@ all: fluid_wm
 
 HEADERS = \
 		  util.hpp \
+		  priority_queue.hpp \
 		  window_manager.hpp
 SOURCES = \
 		  util.cpp \
+		  priority_queue.cpp \
 		  window_manager.cpp \
 		  main.cpp
 OBJECTS = $(SOURCES:.cpp=.o)

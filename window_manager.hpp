@@ -4,6 +4,7 @@
 extern "C" {
 #include <X11/Xlib.h>
 }
+#include "priority_queue.hpp"
 #include "util.hpp"
 #include <memory>
 #include <unordered_map>
@@ -22,6 +23,7 @@ private:
     Display* display_;
     const Window root_;
     ::std::unordered_map<Window, Window> clients_;
+    PriorityQueue* pq;
 
     Position<int> drag_start_pos_;
     Position<int> drag_start_frame_pos_;

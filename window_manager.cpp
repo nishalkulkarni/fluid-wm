@@ -1,6 +1,7 @@
 extern "C" {
 #include <X11/Xutil.h>
 }
+#include "priority_queue.hpp"
 #include "util.hpp"
 #include "window_manager.hpp"
 #include <assert.h>
@@ -23,6 +24,7 @@ std::unique_ptr<WindowManager> WindowManager::Create()
 WindowManager::WindowManager(Display* display)
     : display_(display)
     , root_(DefaultRootWindow(display_))
+    , pq(new PriorityQueue())
     , WM_PROTOCOLS(XInternAtom(display_, "WM_PROTOCOLS", false))
     , WM_DELETE_WINDOW(XInternAtom(display_, "WM_DELETE_WINDOW", false))
 {
@@ -139,6 +141,9 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
         }
     }
 
+    std::cout << " \n\n " << x_window_attrs.width << " -- " << x_window_attrs.height << "\n\n";
+    std::cout << " \n\n " << w << "\n\n";
+
     const Window frame = XCreateSimpleWindow(
         display_,
         root_,
@@ -166,6 +171,8 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
     XMapWindow(display_, frame);
 
     clients_[w] = frame;
+    pq->insert(frame);
+    pq->printQueue();
 
     XGrabButton(
         display_,
@@ -258,6 +265,23 @@ void WindowManager::OnConfigureNotify(const XConfigureEvent& e) { }
 
 void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e)
 {
+    Window returned_root;
+    int x, y;
+    unsigned width, height, border_width, depth;
+
+    assert(XGetGeometry(
+        display_,
+        root_,
+        &returned_root,
+        &x, &y,
+        &width, &height,
+        &border_width,
+        &depth));
+
+    std::cout << width << " @@ " << height << std::endl;
+    std::cout << e.window << std::endl;
+    std::cout << returned_root << std::endl;
+
     XWindowChanges changes;
     // Copy fields from e to changes.
     changes.x = e.x;
@@ -390,11 +414,8 @@ void WindowManager::OnKeyRelease(const XKeyEvent& e) { }
 int WindowManager::OnWMDetected(Display* display, XErrorEvent* e)
 {
     assert(static_cast<int>(e->error_code) == BadAccess);
-    if (static_cast<int>(e->error_code) == BadAccess) {
-        wm_detected_ = true;
-        return 0;
-    }
-    return -1;
+    wm_detected_ = true;
+    return 0;
 }
 
 int WindowManager::OnXError(Display* display, XErrorEvent* e)
