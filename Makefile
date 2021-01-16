@@ -7,10 +7,12 @@ all: fluid_wm
 
 HEADERS = \
 		  util.hpp \
+		  master_stack.hpp \
 		  priority_queue.hpp \
 		  window_manager.hpp
 SOURCES = \
 		  util.cpp \
+		  master_stack.cpp \
 		  priority_queue.cpp \
 		  window_manager.cpp \
 		  main.cpp

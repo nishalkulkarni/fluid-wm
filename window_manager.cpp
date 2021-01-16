@@ -1,6 +1,7 @@
 extern "C" {
 #include <X11/Xutil.h>
 }
+#include "master_stack.hpp"
 #include "priority_queue.hpp"
 #include "util.hpp"
 #include "window_manager.hpp"
@@ -25,6 +26,7 @@ WindowManager::WindowManager(Display* display)
     : display_(display)
     , root_(DefaultRootWindow(display_))
     , pq(new PriorityQueue())
+    , ms(new MasterStack())
     , WM_PROTOCOLS(XInternAtom(display_, "WM_PROTOCOLS", false))
     , WM_DELETE_WINDOW(XInternAtom(display_, "WM_DELETE_WINDOW", false))
 {
@@ -171,8 +173,9 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
     XMapWindow(display_, frame);
 
     clients_[w] = frame;
-    pq->insert(frame);
-    pq->printQueue();
+
+    ms->insert(w);
+    ms->printStack();
 
     XGrabButton(
         display_,
@@ -232,7 +235,9 @@ void WindowManager::Unframe(Window w)
         0, 0);
     XRemoveFromSaveSet(display_, w);
     XDestroyWindow(display_, frame);
+
     clients_.erase(w);
+    ms->erase(w);
 
     std::cout << "Unframed window " << w << " [" << frame << "]";
 }
