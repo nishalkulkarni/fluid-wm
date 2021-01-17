@@ -4,8 +4,8 @@
 extern "C" {
 #include <X11/Xlib.h>
 }
-#include "priority_queue.hpp"
 #include "master_stack.hpp"
+#include "priority_queue.hpp"
 #include "util.hpp"
 #include <memory>
 #include <unordered_map>

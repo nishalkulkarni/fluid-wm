@@ -1,5 +1,5 @@
 #include "master_stack.hpp"
-#include "window_manager.hpp"
+#include "fluid_wm.hpp"
 #include <algorithm>
 #include <iostream>
 #include <vector>

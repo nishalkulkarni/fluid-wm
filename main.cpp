@@ -1,4 +1,4 @@
-#include "window_manager.hpp"
+#include "fluid_wm.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <memory>

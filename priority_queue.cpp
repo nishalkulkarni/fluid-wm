@@ -1,4 +1,4 @@
-#include "window_manager.hpp"
+#include "fluid_wm.hpp"
 #include <algorithm>
 #include <iostream>
 #include <unordered_map>

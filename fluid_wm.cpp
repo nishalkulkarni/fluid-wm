@@ -4,7 +4,7 @@ extern "C" {
 #include "master_stack.hpp"
 #include "priority_queue.hpp"
 #include "util.hpp"
-#include "window_manager.hpp"
+#include "fluid_wm.hpp"
 #include <assert.h>
 #include <cstring>
 #include <iostream>
