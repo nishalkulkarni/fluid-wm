@@ -147,6 +147,8 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
 
     std::cout << " \n\n " << w << " -- " << x_window_attrs.width << " -- " << x_window_attrs.height << " __ " << x_window_attrs.x << " __ " << x_window_attrs.y << "\n\n";
 
+    Node* parent_window;
+    Node* new_window;
     if (clients_.size() == 0) {
         Window returned_root;
         int root_x, root_y;
@@ -163,27 +165,49 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
 
         std::cout << root_width << " @@ " << root_height << std::endl;
         std::cout << root_x << " @@ " << root_y << std::endl;
-        std::cout << root_border_width << " @@ " << root_depth << std::endl;
-        std::cout << returned_root << std::endl;
+        /* std::cout << root_border_width << " @@ " << root_depth << std::endl; */
+        /* std::cout << returned_root << std::endl; */
 
-        bsp->init_root(w, root_width, root_height);
+        std::tie(parent_window, new_window) = bsp->init_root(w, root_width, root_height, root_x, root_y);
     } else {
         /* Window current_focus; */
         /* int revert; */
         /* XGetInputFocus(display_, &current_focus, &revert); */
         /* std::cout << current_focus << " 69 " << revert << std::endl; */
-        bsp->create_node(w);
+        std::tie(parent_window, new_window) = bsp->create_node(w);
     }
-    std::cout << "hello\n\n";
+    int window_width, window_height, window_x, window_y;
+    std::tie(window_width, window_height, window_x, window_y) = new_window->get_dimensions();
+    std::cout << "\n\nhello" << window_width << " 0 " << window_height << "\n";
+    std::cout << "bye" << window_x << " 0 " << window_y << "\n\n";
+
     bsp->display_tree();
+
+    if (parent_window != nullptr) {
+        int parent_width, parent_height, parent_x, parent_y;
+        std::tie(parent_width, parent_height, parent_x, parent_y) = parent_window->get_dimensions();
+        XResizeWindow(
+            display_,
+            clients_[parent_window->get_window()],
+            parent_width, parent_height);
+        XResizeWindow(
+            display_,
+            parent_window->get_window(),
+            parent_width, parent_height);
+    }
+
+    XResizeWindow(
+        display_,
+        w,
+        window_width, window_height);
 
     const Window frame = XCreateSimpleWindow(
         display_,
         root_,
-        x_window_attrs.x,
-        x_window_attrs.y,
-        x_window_attrs.width,
-        x_window_attrs.height,
+        window_x,
+        window_y,
+        window_width,
+        window_height,
         BORDER_WIDTH,
         BORDER_COLOR,
         BG_COLOR);
@@ -205,10 +229,10 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
 
     clients_[w] = frame;
     std::cout << " Map size " << clients_.size() << std::endl;
-
     for (auto i : clients_) {
         std::cout << i.first << " " << i.second << std::endl;
     }
+
     XGrabButton(
         display_,
         Button1,
@@ -301,23 +325,6 @@ void WindowManager::OnConfigureNotify(const XConfigureEvent& e) { }
 
 void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e)
 {
-    Window returned_root;
-    int x, y;
-    unsigned width, height, border_width, depth;
-
-    assert(XGetGeometry(
-        display_,
-        root_,
-        &returned_root,
-        &x, &y,
-        &width, &height,
-        &border_width,
-        &depth));
-
-    std::cout << width << " @@ " << height << std::endl;
-    std::cout << e.window << std::endl;
-    std::cout << returned_root << std::endl;
-
     XWindowChanges changes;
     // Copy fields from e to changes.
     changes.x = e.x;

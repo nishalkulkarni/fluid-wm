@@ -1,6 +1,7 @@
 #include "bsp.hpp"
 #include "fluid_wm.hpp"
 #include <iostream>
+#include <tuple>
 
 Node::Node()
 {
@@ -8,10 +9,12 @@ Node::Node()
     right = nullptr;
 }
 
-void Node::set_dimensions(int w, int h)
+void Node::set_dimensions(int w, int h, int x, int y)
 {
     this->width = w;
     this->height = h;
+    this->x = x;
+    this->y = y;
 }
 
 void Node::set_window(Window w)
@@ -25,9 +28,9 @@ void Node::set_children(Node* l, Node* r)
     this->right = r;
 }
 
-std::pair<int, int> Node::get_dimensions()
+std::tuple<int, int, int, int> Node::get_dimensions()
 {
-    return { this->width, this->height };
+    return std::make_tuple(this->width, this->height, this->x, this->y);
 }
 
 Window Node::get_window()
@@ -52,24 +55,34 @@ bool Node::isLeaf()
 
 void Node::print()
 {
-    std::cout << window << " -> " << width << " -> " << height << std::endl;
+    std::cout << window << " -> " << width << " -> " << height << " -> " << x << " -> " << y << std::endl;
 }
 
-void Node::split_node(Window new_window)
+std::tuple<Node*, Node*> Node::split_node(Window new_window)
 {
     Node* left_child = new Node();
     Node* right_child = new Node();
 
     left_child->set_window(this->window);
     right_child->set_window(new_window);
-    /* this->window = NULL; */
 
-    int split_width = this->width / 2;
-    int split_height = this->height / 2;
-    left_child->set_dimensions(split_width, split_height);
-    right_child->set_dimensions(this->width - split_width, this->height - split_height);
+    int split_width = this->width, split_height = this->height;
+    int split_x = this->x, split_y = this->y;
+    if (this->width >= this->height) {
+        split_width /= 2;
+        split_x += split_width;
+        left_child->set_dimensions(split_width, this->height, this->x, this->y);
+        right_child->set_dimensions(this->width - split_width, this->height, split_x, this->y);
+    } else if (this->width < this->height) {
+        split_height /= 2;
+        split_y += split_height;
+        left_child->set_dimensions(this->width, split_height, this->x, this->y);
+        right_child->set_dimensions(this->width, this->height - split_height, this->x, split_y);
+    }
 
     set_children(left_child, right_child);
+
+    return std::make_tuple(left_child, right_child);
 }
 
 BSP::BSP()
@@ -77,11 +90,12 @@ BSP::BSP()
     root = nullptr;
 }
 
-void BSP::init_root(Window w, int width, int height)
+std::tuple<Node*, Node*> BSP::init_root(Window w, int width, int height, int x, int y)
 {
     root = new Node();
     root->set_window(w);
-    root->set_dimensions(width, height);
+    root->set_dimensions(width, height, x, y);
+    return std::make_tuple(nullptr, root);
 }
 
 Node* BSP::find_node_util(Window w, Node* current)
@@ -120,13 +134,14 @@ Node* BSP::find_node(Window w)
     return res;
 }
 
-void BSP::create_node(Window w)
+std::tuple<Node*, Node*> BSP::create_node(Window w)
 {
     Node* current = find_node(w);
     if (current == nullptr) {
         std::cout << "Cannot create new window\n";
+        return std::make_tuple(nullptr, nullptr);
     } else {
-        current->split_node(w);
+        return current->split_node(w);
     }
 }
 

@@ -8,25 +8,25 @@ extern "C" {
 
 class Node {
 private:
-    int width, height;
+    int width, height, x, y;
     Window window;
     Node* left;
     Node* right;
 
 public:
     Node();
-    void set_dimensions(int w, int h);
+    void set_dimensions(int w, int h, int x, int y);
     void set_window(Window w);
     void set_children(Node* l, Node* r);
 
-    ::std::pair<int, int> get_dimensions();
+    ::std::tuple<int, int, int, int> get_dimensions();
     Window get_window();
     Node* get_left_child();
     Node* get_right_child();
 
     void print();
     bool isLeaf();
-    void split_node(Window new_window);
+    ::std::tuple<Node*, Node*> split_node(Window new_window);
 };
 
 class BSP {
@@ -35,10 +35,10 @@ private:
 
 public:
     BSP();
-    void init_root(Window w, int width, int height);
+    ::std::tuple<Node*, Node*> init_root(Window w, int width, int height, int x, int y);
     Node* find_node_util(Window w, Node* current);
     Node* find_node(Window w);
-    void create_node(Window w);
+    ::std::tuple<Node*, Node*> create_node(Window w);
     void display_tree_util(Node* current);
     void display_tree();
 };
