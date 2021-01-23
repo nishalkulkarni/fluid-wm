@@ -7,11 +7,13 @@ all: fluid_wm
 
 HEADERS = \
 		  util.hpp \
+		  bsp.hpp \
 		  master_stack.hpp \
 		  priority_queue.hpp \
 		  fluid_wm.hpp
 SOURCES = \
 		  util.cpp \
+		  bsp.cpp \
 		  master_stack.cpp \
 		  priority_queue.cpp \
 		  fluid_wm.cpp \

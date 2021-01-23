@@ -1,10 +1,11 @@
 extern "C" {
 #include <X11/Xutil.h>
 }
+#include "bsp.hpp"
+#include "fluid_wm.hpp"
 #include "master_stack.hpp"
 #include "priority_queue.hpp"
 #include "util.hpp"
-#include "fluid_wm.hpp"
 #include <assert.h>
 #include <cstring>
 #include <iostream>
@@ -27,6 +28,7 @@ WindowManager::WindowManager(Display* display)
     , root_(DefaultRootWindow(display_))
     , pq(new PriorityQueue())
     , ms(new MasterStack())
+    , bsp(new BSP())
     , WM_PROTOCOLS(XInternAtom(display_, "WM_PROTOCOLS", false))
     , WM_DELETE_WINDOW(XInternAtom(display_, "WM_DELETE_WINDOW", false))
 {
@@ -128,7 +130,7 @@ void WindowManager::Run()
 
 void WindowManager::Frame(Window w, bool was_created_before_window_manager)
 {
-    const unsigned int BORDER_WIDTH = 3;
+    const unsigned int BORDER_WIDTH = 2;
     const unsigned long BORDER_COLOR = 0xff1234;
     const unsigned long BG_COLOR = 0x0000ff;
 
@@ -143,8 +145,37 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
         }
     }
 
-    std::cout << " \n\n " << x_window_attrs.width << " -- " << x_window_attrs.height << "\n\n";
-    std::cout << " \n\n " << w << "\n\n";
+    std::cout << " \n\n " << w << " -- " << x_window_attrs.width << " -- " << x_window_attrs.height << " __ " << x_window_attrs.x << " __ " << x_window_attrs.y << "\n\n";
+
+    if (clients_.size() == 0) {
+        Window returned_root;
+        int root_x, root_y;
+        unsigned root_width, root_height, root_border_width, root_depth;
+
+        assert(XGetGeometry(
+            display_,
+            root_,
+            &returned_root,
+            &root_x, &root_y,
+            &root_width, &root_height,
+            &root_border_width,
+            &root_depth));
+
+        std::cout << root_width << " @@ " << root_height << std::endl;
+        std::cout << root_x << " @@ " << root_y << std::endl;
+        std::cout << root_border_width << " @@ " << root_depth << std::endl;
+        std::cout << returned_root << std::endl;
+
+        bsp->init_root(w, root_width, root_height);
+    } else {
+        /* Window current_focus; */
+        /* int revert; */
+        /* XGetInputFocus(display_, &current_focus, &revert); */
+        /* std::cout << current_focus << " 69 " << revert << std::endl; */
+        bsp->create_node(w);
+    }
+    std::cout << "hello\n\n";
+    bsp->display_tree();
 
     const Window frame = XCreateSimpleWindow(
         display_,
@@ -173,10 +204,11 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
     XMapWindow(display_, frame);
 
     clients_[w] = frame;
+    std::cout << " Map size " << clients_.size() << std::endl;
 
-    ms->insert(w);
-    ms->printStack();
-
+    for (auto i : clients_) {
+        std::cout << i.first << " " << i.second << std::endl;
+    }
     XGrabButton(
         display_,
         Button1,
@@ -219,7 +251,7 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
         GrabModeAsync,
         GrabModeAsync);
 
-    std::cout << "Framed window " << w << " [" << frame << "]";
+    std::cout << "Framed window " << w << " [" << frame << "]\n\n";
 }
 
 void WindowManager::Unframe(Window w)
@@ -237,7 +269,6 @@ void WindowManager::Unframe(Window w)
     XDestroyWindow(display_, frame);
 
     clients_.erase(w);
-    ms->erase(w);
 
     std::cout << "Unframed window " << w << " [" << frame << "]";
 }

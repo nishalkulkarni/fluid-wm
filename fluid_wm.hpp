@@ -4,6 +4,7 @@
 extern "C" {
 #include <X11/Xlib.h>
 }
+#include "bsp.hpp"
 #include "master_stack.hpp"
 #include "priority_queue.hpp"
 #include "util.hpp"
@@ -26,6 +27,7 @@ private:
     ::std::unordered_map<Window, Window> clients_;
     PriorityQueue* pq;
     MasterStack* ms;
+    BSP* bsp;
 
     Position<int> drag_start_pos_;
     Position<int> drag_start_frame_pos_;
