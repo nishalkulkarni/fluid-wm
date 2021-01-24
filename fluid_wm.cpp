@@ -131,6 +131,7 @@ void WindowManager::Run()
 void WindowManager::Frame(Window w, bool was_created_before_window_manager)
 {
     const unsigned int BORDER_WIDTH = 2;
+    const unsigned int GAP = 4;
     const unsigned long BORDER_COLOR = 0xff1234;
     const unsigned long BG_COLOR = 0x0000ff;
 
@@ -144,8 +145,6 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
             return;
         }
     }
-
-    std::cout << " \n\n " << w << " -- " << x_window_attrs.width << " -- " << x_window_attrs.height << " __ " << x_window_attrs.x << " __ " << x_window_attrs.y << "\n\n";
 
     Node* parent_window;
     Node* new_window;
@@ -163,17 +162,8 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
             &root_border_width,
             &root_depth));
 
-        std::cout << root_width << " @@ " << root_height << std::endl;
-        std::cout << root_x << " @@ " << root_y << std::endl;
-        /* std::cout << root_border_width << " @@ " << root_depth << std::endl; */
-        /* std::cout << returned_root << std::endl; */
-
         std::tie(parent_window, new_window) = bsp->init_root(w, root_width, root_height, root_x, root_y);
     } else {
-        /* Window current_focus; */
-        /* int revert; */
-        /* XGetInputFocus(display_, &current_focus, &revert); */
-        /* std::cout << current_focus << " 69 " << revert << std::endl; */
         std::tie(parent_window, new_window) = bsp->create_node(w);
     }
     int window_width, window_height, window_x, window_y;
@@ -189,25 +179,25 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
         XResizeWindow(
             display_,
             clients_[parent_window->get_window()],
-            parent_width, parent_height);
+            parent_width - 2 * (BORDER_WIDTH + GAP), parent_height - 2 * (BORDER_WIDTH + GAP));
         XResizeWindow(
             display_,
             parent_window->get_window(),
-            parent_width, parent_height);
+            parent_width - 2 * (BORDER_WIDTH + GAP), parent_height - 2 * (BORDER_WIDTH + GAP));
     }
 
     XResizeWindow(
         display_,
         w,
-        window_width, window_height);
+        window_width - 2 * (BORDER_WIDTH + GAP), window_height - 2 * (BORDER_WIDTH + GAP));
 
     const Window frame = XCreateSimpleWindow(
         display_,
         root_,
-        window_x,
-        window_y,
-        window_width,
-        window_height,
+        window_x + GAP,
+        window_y + GAP,
+        window_width - 2 * (BORDER_WIDTH + GAP),
+        window_height - 2 * (BORDER_WIDTH + GAP),
         BORDER_WIDTH,
         BORDER_COLOR,
         BG_COLOR);
