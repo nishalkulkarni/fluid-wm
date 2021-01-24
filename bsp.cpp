@@ -184,8 +184,17 @@ std::tuple<Node*, Node*> BSP::delete_node(Window w)
         std::cout << "No node found :((.\n";
         return std::make_tuple(nullptr, nullptr);
     } else if (foundWindow != nullptr && foundParentWindow == nullptr) {
-
+        delete root;
+        root = nullptr;
+        return std::make_tuple(nullptr, nullptr);
     } else {
+        if (foundWindow == foundParentWindow->get_left_child()) {
+            delete foundWindow;
+            foundParentWindow = foundParentWindow->get_right_child();
+        } else if (foundWindow == foundParentWindow->get_right_child()) {
+            delete foundWindow;
+            foundParentWindow = foundParentWindow->get_left_child();
+        }
     }
 
     return std::make_tuple(nullptr, nullptr);
