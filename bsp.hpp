@@ -25,7 +25,7 @@ public:
     Node* get_right_child();
 
     void print();
-    bool isLeaf();
+    bool is_leaf();
     ::std::tuple<Node*, Node*> split_node(Window new_window);
 };
 
@@ -39,6 +39,8 @@ public:
     Node* find_node_util(Window w, Node* current);
     Node* find_node(Window w);
     ::std::tuple<Node*, Node*> create_node(Window w);
+    ::std::tuple<Node*, Node*> find_to_delete_node(Window w, Node* current);
+    ::std::tuple<Node*, Node*> delete_node(Window w);
     void display_tree_util(Node* current);
     void display_tree();
 };

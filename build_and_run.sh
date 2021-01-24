@@ -11,3 +11,4 @@ xinit ./xinitrc -- \
         -ac \
         -screen 1600x900 \
         -host-cursor
+        -host-grab-key

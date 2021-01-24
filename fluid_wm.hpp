@@ -25,8 +25,6 @@ private:
     Display* display_;
     const Window root_;
     ::std::unordered_map<Window, Window> clients_;
-    PriorityQueue* pq;
-    MasterStack* ms;
     BSP* bsp;
 
     Position<int> drag_start_pos_;

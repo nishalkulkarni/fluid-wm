@@ -2,9 +2,8 @@ extern "C" {
 #include <X11/Xutil.h>
 }
 #include "bsp.hpp"
+#include "config.hpp"
 #include "fluid_wm.hpp"
-#include "master_stack.hpp"
-#include "priority_queue.hpp"
 #include "util.hpp"
 #include <assert.h>
 #include <cstring>
@@ -26,8 +25,6 @@ std::unique_ptr<WindowManager> WindowManager::Create()
 WindowManager::WindowManager(Display* display)
     : display_(display)
     , root_(DefaultRootWindow(display_))
-    , pq(new PriorityQueue())
-    , ms(new MasterStack())
     , bsp(new BSP())
     , WM_PROTOCOLS(XInternAtom(display_, "WM_PROTOCOLS", false))
     , WM_DELETE_WINDOW(XInternAtom(display_, "WM_DELETE_WINDOW", false))
@@ -130,11 +127,6 @@ void WindowManager::Run()
 
 void WindowManager::Frame(Window w, bool was_created_before_window_manager)
 {
-    const unsigned int BORDER_WIDTH = 2;
-    const unsigned int GAP = 4;
-    const unsigned long BORDER_COLOR = 0xff1234;
-    const unsigned long BG_COLOR = 0x0000ff;
-
     assert(!clients_.count(w));
 
     XWindowAttributes x_window_attrs;
@@ -166,6 +158,7 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
     } else {
         std::tie(parent_window, new_window) = bsp->create_node(w);
     }
+
     int window_width, window_height, window_x, window_y;
     std::tie(window_width, window_height, window_x, window_y) = new_window->get_dimensions();
     std::cout << "\n\nhello" << window_width << " 0 " << window_height << "\n";
@@ -199,7 +192,7 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
         window_width - 2 * (BORDER_WIDTH + GAP),
         window_height - 2 * (BORDER_WIDTH + GAP),
         BORDER_WIDTH,
-        BORDER_COLOR,
+        BORDER_ACTIVE_COLOR,
         BG_COLOR);
 
     XSelectInput(
@@ -223,43 +216,21 @@ void WindowManager::Frame(Window w, bool was_created_before_window_manager)
         std::cout << i.first << " " << i.second << std::endl;
     }
 
-    XGrabButton(
-        display_,
-        Button1,
-        Mod1Mask,
-        w,
-        false,
-        ButtonPressMask | ButtonReleaseMask | ButtonMotionMask,
-        GrabModeAsync,
-        GrabModeAsync,
-        None,
-        None);
-    //   b. Resize windows with alt + right button.
-    XGrabButton(
-        display_,
-        Button3,
-        Mod1Mask,
-        w,
-        false,
-        ButtonPressMask | ButtonReleaseMask | ButtonMotionMask,
-        GrabModeAsync,
-        GrabModeAsync,
-        None,
-        None);
-    //   c. Kill windows with alt + f4.
+    XSync(display_,false);
+    //   Kill windows with alt + f4.
     XGrabKey(
         display_,
         XKeysymToKeycode(display_, XK_F4),
-        Mod1Mask,
+        MODKEY,
         w,
         false,
         GrabModeAsync,
         GrabModeAsync);
-    //   d. Switch windows with alt + tab.
+    //   Switch windows with alt + tab.
     XGrabKey(
         display_,
         XKeysymToKeycode(display_, XK_Tab),
-        Mod1Mask,
+        MODKEY,
         w,
         false,
         GrabModeAsync,
@@ -401,8 +372,9 @@ void WindowManager::OnMotionNotify(const XMotionEvent& e)
 
 void WindowManager::OnKeyPress(const XKeyEvent& e)
 {
-    if ((e.state & Mod1Mask) && (e.keycode == XKeysymToKeycode(display_, XK_F4))) {
+    if ((e.state & MODKEY) && (e.keycode == XKeysymToKeycode(display_, XK_F4))) {
         // alt + f4: Close window.
+        std::cout << "fewnlkewlhntkerjnhtrkjhntkrjnhktrnhj\n\n\n";
         Atom* supported_protocols;
         int num_supported_protocols;
         if (XGetWMProtocols(display_,
@@ -428,7 +400,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e)
             std::cout << "Killing window " << e.window;
             XKillClient(display_, e.window);
         }
-    } else if ((e.state & Mod1Mask) && (e.keycode == XKeysymToKeycode(display_, XK_Tab))) {
+    } else if ((e.state & MODKEY) && (e.keycode == XKeysymToKeycode(display_, XK_Tab))) {
         // alt + tab: Switch window.
         auto i = clients_.find(e.window);
         assert(i != clients_.end());

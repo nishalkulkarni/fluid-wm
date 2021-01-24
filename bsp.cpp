@@ -48,7 +48,7 @@ Node* Node::get_right_child()
     return this->right;
 }
 
-bool Node::isLeaf()
+bool Node::is_leaf()
 {
     return (left == nullptr && right == nullptr);
 }
@@ -100,20 +100,20 @@ std::tuple<Node*, Node*> BSP::init_root(Window w, int width, int height, int x, 
 
 Node* BSP::find_node_util(Window w, Node* current)
 {
-    /* if (current->get_window() == w && current->isLeaf()) { */
+    /* if (current->get_window() == w && current->is_leaf()) { */
     /*     return current; */
     /* } */
-    if (current->isLeaf()) {
+    if (current->is_leaf()) {
         return current;
     }
 
-    if (current->get_right_child()->isLeaf() == false) {
+    if (current->get_right_child()->is_leaf() == false) {
         return find_node_util(w, current->get_right_child());
     } else {
         return current->get_right_child();
     }
 
-    if (current->get_left_child()->isLeaf() == false) {
+    if (current->get_left_child()->is_leaf() == false) {
         return find_node_util(w, current->get_left_child());
     } else {
         return current->get_left_child();
@@ -143,6 +143,52 @@ std::tuple<Node*, Node*> BSP::create_node(Window w)
     } else {
         return current->split_node(w);
     }
+}
+
+std::tuple<Node*, Node*> BSP::find_to_delete_node(Window w, Node* current)
+{
+    if (current == nullptr) {
+        std::cout << "Node to delete not found.\n";
+        return std::make_tuple(nullptr, nullptr);
+    }
+
+    if (current->is_leaf() && current == root && current->get_window() == w) {
+        return std::make_tuple(current, nullptr);
+    }
+
+    if (current->is_leaf() == false && current->get_left_child()->is_leaf()
+        && current->get_left_child()->get_window() == w) {
+        return std::make_tuple(current->get_left_child(), current);
+    } else if (current->is_leaf() == false && current->get_right_child()->is_leaf()
+        && current->get_right_child()->get_window() == w) {
+        return std::make_tuple(current->get_right_child(), current);
+    } else {
+        Node* foundWindow;
+        Node* foundParentWindow;
+        std::tie(foundWindow, foundParentWindow) = find_to_delete_node(w, current->get_right_child());
+        if (foundWindow == nullptr && foundParentWindow == nullptr) {
+            std::tie(foundWindow, foundParentWindow) = find_to_delete_node(w, current->get_left_child());
+        }
+        return std::make_tuple(foundWindow, foundParentWindow);
+    }
+    return std::make_tuple(nullptr, nullptr);
+}
+
+std::tuple<Node*, Node*> BSP::delete_node(Window w)
+{
+    Node* foundWindow;
+    Node* foundParentWindow;
+    std::tie(foundWindow, foundParentWindow) = find_to_delete_node(w, root);
+
+    if (foundWindow == nullptr && foundParentWindow == nullptr) {
+        std::cout << "No node found :((.\n";
+        return std::make_tuple(nullptr, nullptr);
+    } else if (foundWindow != nullptr && foundParentWindow == nullptr) {
+
+    } else {
+    }
+
+    return std::make_tuple(nullptr, nullptr);
 }
 
 void BSP::display_tree_util(Node* current)

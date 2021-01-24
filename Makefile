@@ -20,6 +20,8 @@ SOURCES = \
 		  main.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
+${OBJECTS}: config.hpp
+
 fluid_wm: $(HEADERS) $(OBJECTS)
 	$(CXX) -o $@ $(OBJECTS) $(LDFLAGS)
 
