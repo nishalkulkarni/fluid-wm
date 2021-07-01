@@ -1,3 +1,3 @@
 feh --bg-fill --randomize ~/Pictures/Wallpapers/*
 
-exec ./fluid_wm
+exec ../builddir/src/fluid_wm
