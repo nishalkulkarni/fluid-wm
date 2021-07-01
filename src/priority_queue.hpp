@@ -9,29 +9,29 @@ extern "C" {
 
 class PriorityQueue {
 private:
-    ::std::vector<std::pair<int, Window>> window;
-    ::std::unordered_map<Window, int> priority;
-    int numWindows;
+  ::std::vector<std::pair<int, Window>> window;
+  ::std::unordered_map<Window, int> priority;
+  int numWindows;
 
-    int PARENT(int i);
-    int LEFT(int i);
-    int RIGHT(int i);
+  int PARENT(int i);
+  int LEFT(int i);
+  int RIGHT(int i);
 
-    void heapify_down(int i);
-    void heapify_up(int i);
+  void heapify_down(int i);
+  void heapify_up(int i);
 
 public:
-    PriorityQueue();
+  PriorityQueue();
 
-    int queueSize();
-    bool empty();
+  int queueSize();
+  bool empty();
 
-    void insert(Window w);
-    void pop();
-    void swapPriority(Window a, Window b);
+  void insert(Window w);
+  void pop();
+  void swapPriority(Window a, Window b);
 
-    Window getMaster();
-    void printQueue();
+  Window getMaster();
+  void printQueue();
 };
 
 #endif

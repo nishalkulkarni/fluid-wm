@@ -8,20 +8,20 @@ extern "C" {
 
 class MasterStack {
 private:
-    std::vector<Window> stack;
+  std::vector<Window> stack;
 
 public:
-    MasterStack();
+  MasterStack();
 
-    int stackSize();
-    bool empty();
+  int stackSize();
+  bool empty();
 
-    void insert(Window w);
-    void erase(Window w);
-    void swapMaster(Window stack_window);
+  void insert(Window w);
+  void erase(Window w);
+  void swapMaster(Window stack_window);
 
-    Window getMaster();
-    void printStack();
+  Window getMaster();
+  void printStack();
 };
 
 #endif
