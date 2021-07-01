@@ -4,4 +4,4 @@
 
 X11 tiling window manager written in C++
 
-![Screenshot of FluidWM](Screenshot_fluid_wm.jpeg)
+![Screenshot of FluidWM](screenshot.jpeg)
